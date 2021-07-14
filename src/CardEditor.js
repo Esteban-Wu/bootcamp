@@ -1,6 +1,8 @@
 import React from "react";
 import "./CardEditor.css"
 
+import { Link } from "react-router-dom";
+
 /**
  * The CardEditor component allows users to add cards to the flashcard set,
  * as well as edit or delete existing cards.
@@ -104,12 +106,7 @@ class CardEditor extends React.Component {
                     <button onClick={this.addCard}>Add card</button>
                 </div>
                 <hr />
-                <button
-                    // Disable CardViewer when there are no cards
-                    disabled={!this.props.cards.length}
-                    onClick={this.props.switchMode}
-                >
-                    Go to card viewer</button>
+                <Link to="/viewer">Go to card viewer</Link>
             </div>
         );
     }

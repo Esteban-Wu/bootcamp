@@ -1,6 +1,8 @@
 import React from "react";
 import "./CardViewer.css"
 
+import { Link } from "react-router-dom";
+
 /**
  * The CardViewer component allows users to view their flashcard set.
  * They can flip the cards to view both sides, as well as randomize
@@ -139,11 +141,7 @@ class CardViewer extends React.Component {
                     Next
                 </button>
                 <hr />
-                <button
-                    onClick={this.props.switchMode}
-                >
-                    Go to card editor
-                </button>
+                <Link to="/editor">Go to card editor</Link>
             </div>
         );
     }
