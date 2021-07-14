@@ -1,6 +1,11 @@
+* {
+    font-family: system-ui;
+}
+
 #card {
     text-align: center;
     border: 2px solid black;
     padding: 10px;
-    margin: 10px;
+    margin: 20px;
 }
+

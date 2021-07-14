@@ -1,3 +1,11 @@
+* {
+    font-family: system-ui;
+}
+
+#add-card {
+    text-align: center;
+}
+
 table,
 td,
 th {
@@ -5,6 +13,7 @@ th {
 }
 
 table {
+    margin: auto;
     border-collapse: collapse;
 }
 
