@@ -109,7 +109,7 @@ class CardEditor extends React.Component {
                     disabled={!this.props.cards.length}
                     onClick={this.props.switchMode}
                 >
-                    Go to card Viewer</button>
+                    Go to card viewer</button>
             </div>
         );
     }
