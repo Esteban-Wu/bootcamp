@@ -1,9 +1,10 @@
 import React from "react";
 import "./CardEditor.css"
 
-import { Link, withRouter } from "react-router-dom";
+import { Link, withRouter, Redirect } from "react-router-dom";
 import { firebaseConnect } from "react-redux-firebase";
 import { compose } from "redux";
+import { connect } from "react-redux";
 
 /**
  * The CardEditor component allows users to add cards to the flashcard deck,
@@ -16,7 +17,9 @@ class CardEditor extends React.Component {
         /**
          * The "cards" state represents the current cards in the deck.
          * "front" and "back" represent the front and back of the card
-         * to be added, and name stores the deck's name.
+         * to be added, and name stores the deck's name. The "visibility"
+         * state represents whether or not the deck is public, and the 
+         * "uid" state is the user's user ID.
          */
         this.state = {
             cards: [
@@ -27,6 +30,8 @@ class CardEditor extends React.Component {
             front: '',
             back: '',
             name: '',
+            visibility: true,
+            uid: this.props.isLoggedIn,
         };
     }
 
@@ -61,6 +66,14 @@ class CardEditor extends React.Component {
     };
 
     /**
+     * Handles changes to the checkbox when users want to make a
+     * deck private.
+     */
+    handleCheckboxChange = event => {
+        this.setState({ visibility: !event.target.checked });
+    };
+
+    /**
      * Handles edits to previously added cards and updates the 
      * "cards" state.
      */
@@ -71,21 +84,35 @@ class CardEditor extends React.Component {
     };
 
     /**
-     * Adds decks to the RTD (Firestore).
+     * Adds decks to the RTD (Firebase).
      */
     createDeck = () => {
         const deckId = this.props.firebase.push("/flashcards").key;
         const updates = {};
-        const newDeck = { cards: this.state.cards, name: this.state.name };
-        // Stores the deck in /flashcards and the deck's name and key 
-        // separately for homepage use
+        const newDeck = {
+            cards: this.state.cards,
+            name: this.state.name,
+            visibility: this.state.visibility,
+            owner: this.state.uid,
+        };
+        const userProfile = {
+            name: this.state.name,
+            visibility: this.state.visibility,
+            owner: this.state.uid,
+        };
+        // Stores the deck's information in both /flashcards and 
+        // /homepage, but the cards are only saved to /flashcards
         updates[`/flashcards/${deckId}`] = newDeck;
-        updates[`/homepage/${deckId}`] = { name: this.state.name };
+        updates[`/homepage/${deckId}`] = userProfile;
         const onComplete = () => this.props.history.push(`/viewer/${deckId}`);
         this.props.firebase.update('/', updates, onComplete);
     };
 
     render() {
+        if (!this.props.isLoggedIn) {
+            return <Redirect to="/register" />;
+        }
+
         // Maps each card to an HTML table row
         const cards = this.state.cards.map((card, index) => {
             return (
@@ -124,6 +151,12 @@ class CardEditor extends React.Component {
                         onChange={this.handleChange}
                         placeholder="Name of deck"
                         value={this.state.name}
+                    />
+                    <br />
+                    Make private:{' '}
+                    <input
+                        type="checkbox"
+                        onChange={this.handleCheckboxChange}
                     />
                 </div>
                 <br />
@@ -171,5 +204,13 @@ class CardEditor extends React.Component {
     }
 }
 
+const mapStateToProps = state => {
+    return { isLoggedIn: state.firebase.auth.uid };
+};
+
 // Compose order doesn't matter here
-export default compose(firebaseConnect(), withRouter)(CardEditor);
+export default compose(
+    firebaseConnect(),
+    connect(mapStateToProps),
+    withRouter,
+)(CardEditor);

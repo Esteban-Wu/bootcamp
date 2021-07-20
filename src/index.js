@@ -6,6 +6,7 @@ import { BrowserRouter } from "react-router-dom";
 
 import firebase from "firebase/app";
 import "firebase/database";
+import "firebase/auth";
 import { Provider } from 'react-redux';
 import { createStore, combineReducers } from 'redux';
 import {
@@ -39,7 +40,8 @@ const store = createStore(rootReducer, composeWithDevTools());
 
 // react-redux-firebase config
 const rrfConfig = {
-    userProfile: 'users',
+    preserveOnLogout: ["homepage"], // included to preserve info on logout
+    userProfile: "users",
     // useFirestoreForProfile: true // Firestore for Profile instead of Realtime DB
     // enableClaims: true // Get custom claims along with the profile
 };

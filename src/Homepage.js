@@ -12,15 +12,21 @@ class Homepage extends React.Component {
         }
 
         // Maps each deck in the homepage object to a corresponding
-        // viewer link
-        const decks = Object.keys(this.props.decks).map((deck, index) => {
-            return (
-                <div key={index}>
-                    <Link to={`/viewer/${deck}`}>
-                        {this.props.decks[deck].name}
-                    </Link>
-                </div>
-            );
+        // viewer link if the deck is public or is owned by the user.
+        const decks = Object.keys(this.props.decks).map((deckId, index) => {
+            const deck = this.props.decks[deckId];
+            if (deck.visibility || // isLoggedIn === state.firebase.auth.uid
+                (!deck.visibility && deck.owner === this.props.isLoggedIn)) {
+                return (
+                    <div key={index}>
+                        <Link to={`/viewer/${deckId}`}>
+                            {deck.name}
+                        </Link>
+                    </div>
+                );
+            } else {
+                return null;
+            }
         });
 
         return (
@@ -28,8 +34,25 @@ class Homepage extends React.Component {
                 <h2>Homepage</h2>
                 <Link to="/editor">Create a new deck</Link>
                 <br />
-                <br />
+                <h3>Flashcards</h3>
                 <div>{decks}</div>
+                <h3>Account</h3>
+                {this.props.isLoggedIn ? (
+                    <div>
+                        <div>{this.props.email}</div>
+                        <button
+                            onClick={() => this.props.firebase.logout()}
+                        >
+                            Logout
+                        </button>
+                    </div>
+                ) : (
+                    <div>
+                        <Link to="/register">Register</Link>
+                        <br />
+                        <Link to="/login">Login</Link>
+                    </div>
+                )}
             </div>
         );
     }
@@ -40,8 +63,11 @@ class Homepage extends React.Component {
  * for the homepage component.
  */
 const mapStateToProps = (state) => {
-    const decks = state.firebase.data["homepage"];
-    return { decks: decks };
+    return {
+        decks: state.firebase.data.homepage,
+        email: state.firebase.auth.email,
+        isLoggedIn: state.firebase.auth.uid,
+    };
 };
 
 export default compose(
