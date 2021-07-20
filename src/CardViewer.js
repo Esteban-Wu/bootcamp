@@ -1,7 +1,11 @@
 import React from "react";
 import "./CardViewer.css"
 
-import { Link } from "react-router-dom";
+import { Link, withRouter } from "react-router-dom";
+import { firebaseConnect, isLoaded, isEmpty } from "react-redux-firebase";
+import { connect } from "react-redux";
+import { compose } from "redux";
+
 
 /**
  * The CardViewer component allows users to view their flashcard set.
@@ -17,14 +21,15 @@ class CardViewer extends React.Component {
          * being displayed in the viewer. Display is the side of the 
          * card being displayed, and localCards is a copy of the "cards"
          * prop passed by the parent App component. Having a local copy
-         * of the cards makes randomization much easier, and doesn't 
-         * provide any drawbacks as the CardViewer does not need to make
-         * andy direct edits to the "cards" state.
+         * of the cards makes randomization much easier. "display" is 
+         * initialized as null to avoid errors when props.cards has not
+         * finished loading from Firebase.
          */
+
         this.state = {
             currIndex: 0,
-            display: this.props.cards[0].front,
-            localCards: this.props.cards,
+            display: null,
+            localCards: props.cards,
         }
         this.handleKeydown = this.handleKeydown.bind(this);
     }
@@ -96,6 +101,19 @@ class CardViewer extends React.Component {
             this.state.currIndex > 0) {
             this.prevCard();
         }
+    };
+
+    /**
+     * Updates the state if anything has changed (i.e., on data load
+     * from Firebase). 
+     */
+    componentDidUpdate(prevProps) {
+        if (this.props.cards !== prevProps.cards) {
+            this.setState({
+                localCards: this.props.cards,
+                display: this.props.cards[0].front
+            });
+        }
     }
 
     componentDidMount() {
@@ -107,12 +125,20 @@ class CardViewer extends React.Component {
     }
 
     render() {
+        // Handle wait time till loaded props and invalid deckId
+        if (!isLoaded(this.props.cards)) {
+            return <div>Loading...</div>;
+        }
+        if (isEmpty(this.props.cards)) {
+            return <div>Page not found!</div>;
+        }
+
         let progress = "Progress: " + (this.state.currIndex + 1) +
             "/" + (this.props.cards.length) + " cards";
 
         return (
             <div>
-                <h2>Card Viewer</h2>
+                <h2>{this.props.name}</h2>
                 <br />
                 <div>{progress}</div>
                 <br />
@@ -141,10 +167,28 @@ class CardViewer extends React.Component {
                     Next
                 </button>
                 <hr />
-                <Link to="/editor">Go to card editor</Link>
+                <Link to="/">Home</Link>
             </div>
         );
     }
 }
 
-export default CardViewer;
+/**
+ * Maps the deck from redux global state to the CardViewer 
+ * component props.
+ */
+const mapStateToProps = (state, props) => {
+    const deck = state.firebase.data[props.match.params.deckId];
+    const name = deck && deck.name;
+    const cards = deck && deck.cards;
+    return { cards: cards, name: name };
+};
+
+export default compose(
+    withRouter,
+    firebaseConnect(props => {
+        const deckId = props.match.params.deckId;
+        return [{ path: `/flashcards/${deckId}`, storeAs: deckId }];
+    }),
+    connect(mapStateToProps),
+)(CardViewer);

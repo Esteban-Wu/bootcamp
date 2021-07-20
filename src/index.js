@@ -5,8 +5,9 @@ import App from "./App";
 import { BrowserRouter } from "react-router-dom";
 
 import firebase from "firebase/app";
+import "firebase/database";
 import { Provider } from 'react-redux';
-import { createStore, combineReducers, compose } from 'redux';
+import { createStore, combineReducers } from 'redux';
 import {
     ReactReduxFirebaseProvider,
     firebaseReducer
@@ -33,7 +34,7 @@ const rootReducer = combineReducers({
     // firestore: firestoreReducer // <- needed if using firestore
 });
 
-// Create store with reducers and initial state
+// Create store with reducers and add dev tools
 const store = createStore(rootReducer, composeWithDevTools());
 
 // react-redux-firebase config
