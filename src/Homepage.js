@@ -5,28 +5,39 @@ import { connect } from "react-redux";
 import { compose } from "redux";
 
 class Homepage extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {};
+    }
+
+    /**
+     * On mount, retrieves the homepage data from a cloud function
+     */
+    async componentDidMount() {
+        const getHomepage = this.props.firebase
+            .functions()
+            .httpsCallable("getHomepage");
+
+        const homepage = await getHomepage();
+        this.setState({ homepage: homepage.data });
+    }
 
     render() {
-        if (!isLoaded(this.props.decks)) {
+        if (!isLoaded(this.state.homepage)) {
             return <div>Loading...</div>;
         }
 
         // Maps each deck in the homepage object to a corresponding
-        // viewer link if the deck is public or is owned by the user.
-        const decks = Object.keys(this.props.decks).map((deckId, index) => {
-            const deck = this.props.decks[deckId];
-            if (deck.visibility || // isLoggedIn === state.firebase.auth.uid
-                (!deck.visibility && deck.owner === this.props.isLoggedIn)) {
-                return (
-                    <div key={index}>
-                        <Link to={`/viewer/${deckId}`}>
-                            {deck.name}
-                        </Link>
-                    </div>
-                );
-            } else {
-                return null;
-            }
+        // viewer link
+        const decks = Object.keys(this.state.homepage).map((deckId, index) => {
+            const deck = this.state.homepage[deckId];
+            return (
+                <div key={index}>
+                    <Link to={`/viewer/${deckId}`}>
+                        {deck.name}
+                    </Link>
+                </div>
+            );
         });
 
         return (
@@ -64,13 +75,12 @@ class Homepage extends React.Component {
  */
 const mapStateToProps = (state) => {
     return {
-        decks: state.firebase.data.homepage,
         email: state.firebase.auth.email,
         isLoggedIn: state.firebase.auth.uid,
     };
 };
 
 export default compose(
-    firebaseConnect(["/homepage"]),
+    firebaseConnect(),
     connect(mapStateToProps)
 )(Homepage);

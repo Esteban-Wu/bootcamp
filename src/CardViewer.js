@@ -139,7 +139,7 @@ class CardViewer extends React.Component {
         return (
             <div>
                 <h2>{this.props.name}</h2>
-                <div>Created by: {this.props.owner}</div>
+                <div>Created by: {this.props.username}</div>
                 <br />
                 <div>{progress}</div>
                 <br />
@@ -184,11 +184,11 @@ const populates = [
  */
 const mapStateToProps = (state, props) => {
     const deckId = props.match.params.deckId;
-    const deck = state.firebase.data[deckId];
+    const deck = populate(state.firebase, deckId, populates);
     const name = deck && deck.name;
     const cards = deck && deck.cards;
-    const owner = populate(state.firebase, "profile/username", populates);
-    return { cards, name, owner };
+    const username = deck && deck.owner.username;
+    return { cards: cards, name: name, username: username };
 };
 
 export default compose(
