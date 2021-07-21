@@ -30,6 +30,7 @@ class CardEditor extends React.Component {
             front: '',
             back: '',
             name: '',
+            description: '',
             visibility: true,
             uid: this.props.isLoggedIn,
         };
@@ -92,13 +93,17 @@ class CardEditor extends React.Component {
         const newDeck = {
             cards: this.state.cards,
             name: this.state.name,
+            description: this.state.description,
             visibility: this.state.visibility,
             owner: this.state.uid,
+            save: false,
         };
         const userProfile = {
             name: this.state.name,
+            description: this.state.description,
             visibility: this.state.visibility,
             owner: this.state.uid,
+            save: false,
         };
         // Stores the deck's information in both /flashcards and 
         // /homepage, but the cards are only saved to /flashcards
@@ -157,6 +162,14 @@ class CardEditor extends React.Component {
                     <input
                         type="checkbox"
                         onChange={this.handleCheckboxChange}
+                    />
+                    <br />
+                    Description:{' '}
+                    <input
+                        name="description"
+                        onChange={this.handleChange}
+                        placeholder="Description"
+                        value={this.state.description}
                     />
                 </div>
                 <br />

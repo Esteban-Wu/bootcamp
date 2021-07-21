@@ -1,7 +1,7 @@
 import React from "react";
 import "./CardViewer.css"
 
-import { Link, withRouter } from "react-router-dom";
+import { Link, withRouter, Redirect } from "react-router-dom";
 import { firebaseConnect, isLoaded, isEmpty, populate } from "react-redux-firebase";
 import { connect } from "react-redux";
 import { compose } from "redux";
@@ -30,7 +30,10 @@ class CardViewer extends React.Component {
             currIndex: 0,
             display: null,
             localCards: props.cards,
+            // save: false,
+            // uid: this.props.isLoggedIn,
         }
+
         this.handleKeydown = this.handleKeydown.bind(this);
     }
 
@@ -103,6 +106,8 @@ class CardViewer extends React.Component {
         }
     };
 
+    handleSave = () => this.setState({ save: !this.state.save }, this.updateSave);
+
     /**
      * Updates the state if anything has changed (i.e., on data load
      * from Firebase). 
@@ -124,7 +129,24 @@ class CardViewer extends React.Component {
         document.removeEventListener("keydown", this.handleKeydown, false);
     }
 
+    // updateSave = async () => {
+    //     const deckId = this.props.deckId;
+    //     const updates = {};
+    //     const save = { save: this.state.save };
+    //     const owner = { owner: this.state.owner };
+
+    //     updates[`/flashcards/${deckId}/save`] = save;
+    //     updates[`/flashcards/${deckId}/owner`] = owner;
+    //     updates[`/homepage/${deckId}/save`] = save;
+    //     updates[`/homepage/${deckId}/owner`] = owner;
+    //     console.log(updates);
+    //     await this.props.firebase.update('/', updates);
+    // };
+
     render() {
+        if (!this.props.isLoggedIn) {
+            return <Redirect to="/register" />;
+        }
         // Handle wait time till loaded props and invalid deckId
         if (!isLoaded(this.props.cards)) {
             return <div>Loading...</div>;
@@ -139,6 +161,9 @@ class CardViewer extends React.Component {
         return (
             <div>
                 <h2>{this.props.name}</h2>
+                <br />
+                <p>{this.props.description}</p>
+                <br />
                 <div>Created by: {this.props.username}</div>
                 <br />
                 <div>{progress}</div>
@@ -167,6 +192,17 @@ class CardViewer extends React.Component {
                 >
                     Next
                 </button>
+                <br />
+                {/* <br />
+                {this.state.save ? (
+                    <div>
+                        <button onClick={this.handleSave}>Unsave deck</button>
+                    </div>
+                ) : (
+                    <div>
+                        <button onClick={this.handleSave}>Save deck</button>
+                    </div>
+                )} */}
                 <hr />
                 <Link to="/">Home</Link>
             </div>
@@ -187,8 +223,17 @@ const mapStateToProps = (state, props) => {
     const deck = populate(state.firebase, deckId, populates);
     const name = deck && deck.name;
     const cards = deck && deck.cards;
+    const description = deck && deck.description;
     const username = deck && deck.owner.username;
-    return { cards: cards, name: name, username: username };
+    const isLoggedIn = state.firebase.auth.uid;
+    return {
+        deckId: deckId,
+        cards: cards,
+        name: name,
+        username: username,
+        description: description,
+        isLoggedIn: isLoggedIn,
+    };
 };
 
 export default compose(

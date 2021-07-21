@@ -36,6 +36,8 @@ class Homepage extends React.Component {
                     <Link to={`/viewer/${deckId}`}>
                         {deck.name}
                     </Link>
+                    {' '}
+                    {deck.description}
                 </div>
             );
         });
