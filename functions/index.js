@@ -34,3 +34,45 @@ exports.getHomepage = functions.https.onCall(async (data, context) => {
 
     return sanitized;
 });
+
+/**
+ * Given a new deck and deckId (key), adds a new deck to Firebase.
+ */
+exports.createDeck = functions.https.onCall(async (data, context) => {
+    const deckData = data;
+    const deck = deckData.deck;
+
+    if (!Array.isArray(deck.cards)) {
+        return null;
+    }
+
+    const deckId = deckData.key;
+    const updates = {};
+    const profile = {
+        name: deck.name,
+        description: deck.description,
+        visibility: deck.visibility,
+        owner: deck.owner,
+        save: deck.save,
+    };
+
+    // Stores the deck's information in both /flashcards and 
+    // /homepage, but the cards are only saved to /flashcards
+    updates[`/flashcards/${deckId}`] = deck;
+    updates[`/homepage/${deckId}`] = profile;
+
+    return await admin.database().ref().update(updates);
+});
+
+/**
+ * Given a user ID, returns that user's username.
+ */
+exports.getUsername = functions.https.onCall(async (data, context) => {
+    const uid = data;
+    const usernameSnapshot = await admin
+    .database()
+    .ref(`/users/${uid}/username`)
+    .once("value");
+    const username = usernameSnapshot.val();
+    return username;
+});

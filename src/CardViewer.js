@@ -2,7 +2,7 @@ import React from "react";
 import "./CardViewer.css"
 
 import { Link, withRouter, Redirect } from "react-router-dom";
-import { firebaseConnect, isLoaded, isEmpty, populate } from "react-redux-firebase";
+import { firebaseConnect, isLoaded, isEmpty } from "react-redux-firebase";
 import { connect } from "react-redux";
 import { compose } from "redux";
 
@@ -30,6 +30,7 @@ class CardViewer extends React.Component {
             currIndex: 0,
             display: null,
             localCards: props.cards,
+            username: '',
             // save: false,
             // uid: this.props.isLoggedIn,
         }
@@ -106,17 +107,39 @@ class CardViewer extends React.Component {
         }
     };
 
+    /**
+     * Handles updates to the save button and updates the "save" state
+     */
     handleSave = () => this.setState({ save: !this.state.save }, this.updateSave);
+
+    /**
+     * Given the deck owner's uid, retrieves their username through the 
+     * cloud function getUsername().
+     */
+    updateUsername = async (uid) =>{
+        const getUsername = this.props.firebase
+            .functions()
+            .httpsCallable("getUsername");
+        const username = await getUsername(uid);
+        return username;
+    };
 
     /**
      * Updates the state if anything has changed (i.e., on data load
      * from Firebase). 
      */
-    componentDidUpdate(prevProps) {
+    async componentDidUpdate(prevProps) {
         if (this.props.cards !== prevProps.cards) {
             this.setState({
                 localCards: this.props.cards,
                 display: this.props.cards[0].front
+            });
+        }
+        
+        if (this.props.owner !== prevProps.owner) {
+            const username = await this.updateUsername(this.props.owner);
+            this.setState({
+                username: username.data,
             });
         }
     }
@@ -147,7 +170,7 @@ class CardViewer extends React.Component {
         if (!this.props.isLoggedIn) {
             return <Redirect to="/register" />;
         }
-        // Handle wait time till loaded props and invalid deckId
+        // Handle wait time till props loaded and invalid deckId
         if (!isLoaded(this.props.cards)) {
             return <div>Loading...</div>;
         }
@@ -164,7 +187,7 @@ class CardViewer extends React.Component {
                 <br />
                 <p>{this.props.description}</p>
                 <br />
-                <div>Created by: {this.props.username}</div>
+                <div>Created by: {this.state.username}</div>
                 <br />
                 <div>{progress}</div>
                 <br />
@@ -210,27 +233,23 @@ class CardViewer extends React.Component {
     }
 }
 
-const populates = [
-    { child: 'owner', root: 'users' }
-];
-
 /**
  * Maps the deck from redux global state to the CardViewer 
  * component props.
  */
 const mapStateToProps = (state, props) => {
     const deckId = props.match.params.deckId;
-    const deck = populate(state.firebase, deckId, populates);
+    const deck = state.firebase.data[deckId];
     const name = deck && deck.name;
     const cards = deck && deck.cards;
     const description = deck && deck.description;
-    const username = deck && deck.owner.username;
+    const owner = deck && deck.owner;
     const isLoggedIn = state.firebase.auth.uid;
     return {
         deckId: deckId,
         cards: cards,
         name: name,
-        username: username,
+        owner: owner,
         description: description,
         isLoggedIn: isLoggedIn,
     };
@@ -240,7 +259,7 @@ export default compose(
     withRouter,
     firebaseConnect(props => {
         const deckId = props.match.params.deckId;
-        return [{ path: `/flashcards/${deckId}`, storeAs: deckId, populates }];
+        return [{ path: `/flashcards/${deckId}`, storeAs: deckId }];
     }),
     connect(mapStateToProps),
 )(CardViewer);

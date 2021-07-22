@@ -87,9 +87,12 @@ class CardEditor extends React.Component {
     /**
      * Adds decks to the RTD (Firebase).
      */
-    createDeck = () => {
+    createDeck = async () => {
+        const createDeck = this.props.firebase
+            .functions()
+            .httpsCallable("createDeck");
+
         const deckId = this.props.firebase.push("/flashcards").key;
-        const updates = {};
         const newDeck = {
             cards: this.state.cards,
             name: this.state.name,
@@ -98,19 +101,20 @@ class CardEditor extends React.Component {
             owner: this.state.uid,
             save: false,
         };
-        const userProfile = {
-            name: this.state.name,
-            description: this.state.description,
-            visibility: this.state.visibility,
-            owner: this.state.uid,
-            save: false,
-        };
-        // Stores the deck's information in both /flashcards and 
-        // /homepage, but the cards are only saved to /flashcards
-        updates[`/flashcards/${deckId}`] = newDeck;
-        updates[`/homepage/${deckId}`] = userProfile;
-        const onComplete = () => this.props.history.push(`/viewer/${deckId}`);
-        this.props.firebase.update('/', updates, onComplete);
+
+        // Send the update information to the cloud function
+        // to update Firebase
+        const updates = {};
+        updates["deck"] = newDeck;
+        updates["key"] = deckId;
+        
+        const confirm = await createDeck(updates);
+
+        if (confirm) {
+            this.props.history.push(`/viewer/${deckId}`);
+        } else {
+            alert("Sorry, that's an invalid card deck")
+        }
     };
 
     render() {
