@@ -1,5 +1,6 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+const { user } = require("firebase-functions/lib/providers/auth");
 admin.initializeApp();
 
 // // Create and Deploy Your First Cloud Functions

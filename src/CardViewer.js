@@ -119,6 +119,7 @@ class CardViewer extends React.Component {
             .functions()
             .httpsCallable("getUsername");
         const username = await getUsername(uid);
+        console.log(username);
         this.setState({
             username: username.data,
         });
@@ -137,17 +138,18 @@ class CardViewer extends React.Component {
         }
         
         if (this.props.owner !== prevProps.owner) {
-            this.updateUsername();
+            await this.updateUsername(this.props.owner);
         }
-    }
+    };
 
-    componentDidMount() {
+    async componentDidMount() {
         document.addEventListener("keydown", this.handleKeydown, false);
-    }
+        await this.updateUsername(this.props.owner);
+    };
 
     componentWillUnmount() {
         document.removeEventListener("keydown", this.handleKeydown, false);
-    }
+    };
 
     render() {
         if (!this.props.isLoggedIn) {
