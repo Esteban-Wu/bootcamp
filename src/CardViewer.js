@@ -31,8 +31,6 @@ class CardViewer extends React.Component {
             display: null,
             localCards: props.cards,
             username: '',
-            // save: false,
-            // uid: this.props.isLoggedIn,
         }
 
         this.handleKeydown = this.handleKeydown.bind(this);
@@ -121,7 +119,9 @@ class CardViewer extends React.Component {
             .functions()
             .httpsCallable("getUsername");
         const username = await getUsername(uid);
-        return username;
+        this.setState({
+            username: username.data,
+        });
     };
 
     /**
@@ -137,10 +137,7 @@ class CardViewer extends React.Component {
         }
         
         if (this.props.owner !== prevProps.owner) {
-            const username = await this.updateUsername(this.props.owner);
-            this.setState({
-                username: username.data,
-            });
+            this.updateUsername();
         }
     }
 
@@ -151,20 +148,6 @@ class CardViewer extends React.Component {
     componentWillUnmount() {
         document.removeEventListener("keydown", this.handleKeydown, false);
     }
-
-    // updateSave = async () => {
-    //     const deckId = this.props.deckId;
-    //     const updates = {};
-    //     const save = { save: this.state.save };
-    //     const owner = { owner: this.state.owner };
-
-    //     updates[`/flashcards/${deckId}/save`] = save;
-    //     updates[`/flashcards/${deckId}/owner`] = owner;
-    //     updates[`/homepage/${deckId}/save`] = save;
-    //     updates[`/homepage/${deckId}/owner`] = owner;
-    //     console.log(updates);
-    //     await this.props.firebase.update('/', updates);
-    // };
 
     render() {
         if (!this.props.isLoggedIn) {
@@ -216,16 +199,6 @@ class CardViewer extends React.Component {
                     Next
                 </button>
                 <br />
-                {/* <br />
-                {this.state.save ? (
-                    <div>
-                        <button onClick={this.handleSave}>Unsave deck</button>
-                    </div>
-                ) : (
-                    <div>
-                        <button onClick={this.handleSave}>Save deck</button>
-                    </div>
-                )} */}
                 <hr />
                 <Link to="/">Home</Link>
             </div>

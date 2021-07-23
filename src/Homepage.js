@@ -67,7 +67,9 @@ class Homepage extends React.Component {
                 <h3>Account</h3>
                 {this.props.isLoggedIn ? (
                     <div>
+                        <Link to="/profile">Profile</Link>
                         <div>{this.props.email}</div>
+                        <br />
                         <button
                             onClick={() => this.props.firebase.logout()}
                         >
